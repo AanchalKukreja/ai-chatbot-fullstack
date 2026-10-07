@@ -28,20 +28,22 @@ export function useChat() {
   // Resolves to true on success. On failure the message is rolled back out of the context
   // (so two user messages never follow each other) and the caller can restore the text.
   // It resolves to null when the call is ignored (empty, busy or cancelled by clearing the chat).
+  // `base` is the history the new user message is appended to, and `restoreTo` what to go back to if the
+  // request fails. Both default to the current messages; regenerate passes its own.
   const send = useCallback(
-    async (rawText) => {
+    async (rawText, { base = messages, restoreTo = messages, withSound = true } = {}) => {
       const text = rawText.trim();
       if (!text || busyRef.current) return null;
 
       busyRef.current = true;
       const controller = new AbortController();
       abortRef.current = controller;
-      const next = [...messages, { role: "user", content: text }];
+      const next = [...base, { role: "user", content: text }];
 
       setMessages(next);
       setError("");
       setLoading(true);
-      playSound("user");
+      if (withSound) playSound("user");
 
       try {
         const res = await fetch(apiUrl("/api/chat"), {
@@ -59,7 +61,7 @@ export function useChat() {
         return true;
       } catch (err) {
         if (err.name === "AbortError") return null;
-        setMessages(messages);
+        setMessages(restoreTo);
         setError(err instanceof ApiError ? err.message : NETWORK_ERROR);
         return false;
       } finally {
@@ -73,6 +75,15 @@ export function useChat() {
     [messages],
   );
 
+  // Replaces the latest bot reply: it is dropped from the chat (and so from the saved history) and the same
+  // user message is sent again, without adding it a second time. If the request fails, the old reply returns.
+  const regenerate = useCallback(() => {
+    const last = messages.at(-1);
+    const before = messages.at(-2);
+    if (last?.role !== "assistant" || before?.role !== "user") return Promise.resolve(null);
+    return send(before.content, { base: messages.slice(0, -2), restoreTo: messages, withSound: false });
+  }, [messages, send]);
+
   const clear = useCallback(() => {
     abortRef.current?.abort();
     abortRef.current = null;
@@ -82,5 +93,5 @@ export function useChat() {
     setError("");
   }, []);
 
-  return { messages, loading, error, send, clear };
+  return { messages, loading, error, send, regenerate, clear };
 }

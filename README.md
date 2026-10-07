@@ -12,12 +12,17 @@ the basics done properly (validation, rate limiting, tests).
 
 - Chat with Google Gemini, with real conversation memory (the last 10 messages are sent each time)
 - Light and dark themes, sound effects, "AI is thinking" indicator, live character counter
-- Enter to send, Shift+Enter for a new line
+- Enter to send, Shift+Enter for a new line; the box grows to 5 lines, then scrolls
+- Round icon send button with disabled, hover, pressed and loading (spinner) states
+- **Copy** button under every bot reply (with a "Copied" confirmation), and **Regenerate** on the latest reply
 - Welcome block with starter-question chips; it hides after the first message and returns after clearing
 - Clear chat and export the conversation as a `.txt` file
 - Chat is saved in `localStorage` (capped at 50 messages, read defensively)
 - Friendly error messages, with failed messages never left in the conversation context
-- Responsive layout, `100dvh` for mobile browser bars, visible focus styles, `prefers-reduced-motion` respected
+- Replies keep their paragraphs and line breaks; long words and links wrap instead of overflowing
+- The view follows new messages, but does not jump if you have scrolled up to read
+- Responsive layout that stays clear of notches and the on-screen keyboard (`100dvh`, safe-area insets),
+  visible focus styles, 44px touch targets, `prefers-reduced-motion` respected
 
 ## Stack
 
@@ -25,7 +30,7 @@ the basics done properly (validation, rate limiting, tests).
 | ------ | ----------------------------------------------------------------- |
 | Client | React 19, Vite, lucide-react                                      |
 | Server | Node.js, Express 5, `@google/genai`, `express-rate-limit`, `cors` |
-| Tests  | Vitest + Supertest (the Gemini call is mocked)                    |
+| Tests  | Vitest + Supertest (server), Vitest + Testing Library (client)    |
 | Tools  | ESLint 9, Prettier                                                |
 
 All dependency versions are pinned exactly.
@@ -72,7 +77,7 @@ npm --prefix client install
 ### Other scripts
 
 ```bash
-npm test               # server tests (validation, rate limit, error mapping)
+npm test               # server tests (validation, rate limit, errors) and client tests (copy, regenerate, input)
 npm run lint           # ESLint
 npm run format         # Prettier
 npm run build          # production build of the client

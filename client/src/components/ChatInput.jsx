@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { ArrowUp, LoaderCircle } from "lucide-react";
 import { MAX_INPUT_LENGTH } from "../lib/chat.js";
 
 // The counter turns to the accent colour within 10% of the limit, and to the error colour at the limit.
@@ -14,14 +15,15 @@ export default function ChatInput({ value, onChange, onSubmit, loading }) {
   const textareaRef = useRef(null);
   const isEmpty = value.trim() === "";
 
-  // Grow with the content (Shift+Enter adds lines), up to a small cap.
+  // Grow with the content (Shift+Enter adds lines) up to the CSS max-height (5 lines), then scroll.
   useEffect(() => {
     const el = textareaRef.current;
     if (!el) return;
     const style = getComputedStyle(el);
     const padding = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
+    const cap = parseFloat(style.maxHeight) || Infinity;
     el.style.height = "auto";
-    el.style.height = `${Math.min(el.scrollHeight - padding, 120)}px`;
+    el.style.height = `${Math.min(el.scrollHeight - padding, cap)}px`;
   }, [value]);
 
   function submit() {
@@ -65,24 +67,27 @@ export default function ChatInput({ value, onChange, onSubmit, loading }) {
           onChange={handleChange}
           onKeyDown={handleKeyDown}
         />
-        <span id="char-count" className={counterClass(value.length)}>
-          {value.length}/{MAX_INPUT_LENGTH}
-        </span>
         <button
           id="send-btn"
           type="button"
           aria-label="Send message"
+          aria-busy={loading}
           disabled={isEmpty || loading}
           onClick={submit}
         >
-          📨
+          {loading ? <LoaderCircle className="spin" aria-hidden="true" /> : <ArrowUp aria-hidden="true" />}
         </button>
       </div>
-      {hint && (
-        <p id="input-hint" className="field-hint" role="alert">
-          {hint}
-        </p>
-      )}
+      <div className="input-meta">
+        {hint && (
+          <p id="input-hint" className="field-hint" role="alert">
+            {hint}
+          </p>
+        )}
+        <span id="char-count" className={counterClass(value.length)}>
+          {value.length}/{MAX_INPUT_LENGTH}
+        </span>
+      </div>
     </footer>
   );
 }

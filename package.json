@@ -5,11 +5,13 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "npm --prefix server test",
+    "test": "npm --prefix server test && npm --prefix client test",
     "dev:server": "npm --prefix server run dev",
     "dev:client": "npm --prefix client run dev",
     "build": "npm --prefix client run build",
-    "start:server": "npm --prefix server start"
+    "start:server": "npm --prefix server start",
+    "test:server": "npm --prefix server test",
+    "test:client": "npm --prefix client test"
   },
   "private": true,
   "devDependencies": {
