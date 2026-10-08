@@ -1,7 +1,9 @@
 import { Bot } from "lucide-react";
 import MessageActions from "./MessageActions.jsx";
+import { useMarkdown } from "../lib/markdownLoader.js";
 
-// Plain text only: blank lines become paragraph gaps and single line breaks are kept (pre-wrap in the CSS).
+// Plain text (user messages and errors): blank lines become paragraph gaps and single line breaks are kept
+// (pre-wrap in the CSS).
 function Paragraphs({ text }) {
   const blocks = text
     .trim()
@@ -12,12 +14,16 @@ function Paragraphs({ text }) {
 
 function Message({ role, content, error = false, actions = null }) {
   const side = role === "user" ? "user" : "bot";
+  // Only real bot replies are markdown. User messages and error messages stay plain text, and so does a
+  // reply while the markdown renderer is still loading.
+  const markdown = useMarkdown();
+  const isMarkdown = role === "assistant" && !error && markdown !== null;
   return (
     <div className={`message ${side}`}>
       <div className={`bubble ${side}${error ? " error" : ""}`} role={error ? "alert" : undefined}>
         <span className="icon">{role === "user" ? "😊" : <Bot aria-hidden="true" />}</span>
         <div className="text">
-          <Paragraphs text={content} />
+          {isMarkdown ? <markdown.Component text={content} /> : <Paragraphs text={content} />}
         </div>
       </div>
       {actions}

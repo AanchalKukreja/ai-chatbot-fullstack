@@ -19,7 +19,13 @@ the basics done properly (validation, rate limiting, tests).
 - Clear chat and export the conversation as a `.txt` file
 - Chat is saved in `localStorage` (capped at 50 messages, read defensively)
 - Friendly error messages, with failed messages never left in the conversation context
-- Replies keep their paragraphs and line breaks; long words and links wrap instead of overflowing
+- Bot replies are rendered as **markdown**: headings, bold and italics, lists, links, quotes and tables
+  (tables scroll sideways inside the bubble). Your own messages stay plain text.
+- **Code blocks** with syntax highlighting, the language name, and a Copy button for just that code
+- Safe by design: raw HTML is never rendered, output is sanitized, and links open in a new tab and may only
+  be `http`, `https` or `mailto`
+- The reply Copy button copies the markdown source, not the rendered HTML
+- Long words and links wrap instead of overflowing
 - The view follows new messages, but does not jump if you have scrolled up to read
 - Responsive layout that stays clear of notches and the on-screen keyboard (`100dvh`, safe-area insets),
   visible focus styles, 44px touch targets, `prefers-reduced-motion` respected
@@ -105,13 +111,16 @@ Browser (React)  --POST /api/chat-->  Express  --generateContent-->  Gemini
   to fit the server's size limits. Replies are never shortened on screen or in storage; only an assistant
   reply over 8000 characters is clamped in the outgoing history so follow-ups keep working.
   If a request fails, the message is removed from the context and put back in the input box.
-- Rendering is plain text for now.
+- Markdown is rendered with `react-markdown` and `remark-gfm`, sanitized with `rehype-sanitize` and highlighted
+  with `highlight.js` (a small set of common languages). That code is a separate chunk that is downloaded only
+  once there is a conversation, so the first page load stays small; until it arrives, a reply shows as plain text.
 
 ```
 client/src/
   components/   Header, Welcome, MessageList, ThinkingStatus, ChatInput
   hooks/        useChat (state, requests, rollback), useTheme
-  lib/          api (API base URL), chat (context building, sanitising), storage, sounds, exportChat
+  lib/          api (API base URL), chat (context building, sanitising), storage, sounds, exportChat,
+                clipboard, highlight (languages), markdownLoader (lazy-loads the renderer)
 server/
   app.js        Express app (validation, CORS, rate limit, health check, error mapping)
   index.js      loads env, creates the Gemini client, starts the server
@@ -221,5 +230,5 @@ isn't responding", and the Vite terminal prints `http proxy error: /api/chat` wi
 
 ## Roadmap
 
-Later stages: streaming, markdown and code rendering, multiple chats ("New chat"), MongoDB, and an
+Later stages: streaming, multiple chats ("New chat"), MongoDB, and an
 "Ask Aanchal" mode.

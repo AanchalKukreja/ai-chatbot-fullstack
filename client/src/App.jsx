@@ -7,6 +7,7 @@ import ChatInput from "./components/ChatInput.jsx";
 import { useChat } from "./hooks/useChat.js";
 import { useTheme } from "./hooks/useTheme.js";
 import { exportChat } from "./lib/exportChat.js";
+import { preloadMarkdown } from "./lib/markdownLoader.js";
 
 // Within this many pixels of the bottom counts as "reading the latest message".
 const NEAR_BOTTOM_PX = 80;
@@ -23,6 +24,12 @@ export default function App() {
     const main = mainRef.current;
     followRef.current = main.scrollHeight - main.scrollTop - main.clientHeight < NEAR_BOTTOM_PX;
   }
+
+  // Start downloading the markdown renderer as soon as there is a conversation to show.
+  const hasConversation = messages.length > 0 || loading;
+  useEffect(() => {
+    if (hasConversation) preloadMarkdown().catch(() => {});
+  }, [hasConversation]);
 
   useEffect(() => {
     const main = mainRef.current;

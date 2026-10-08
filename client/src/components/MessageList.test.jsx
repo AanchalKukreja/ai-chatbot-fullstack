@@ -1,7 +1,11 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeAll } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import MessageList from "./MessageList.jsx";
 import Welcome from "./Welcome.jsx";
+import { preloadMarkdown } from "../lib/markdownLoader.js";
+
+// The app loads the markdown renderer in the background; the tests wait for it up front.
+beforeAll(() => preloadMarkdown());
 
 const convo = [
   { role: "user", content: "First question" },
@@ -76,14 +80,14 @@ describe("MessageList: regenerate button", () => {
   });
 });
 
-describe("MessageList: text layout", () => {
+describe("MessageList: plain text layout (user messages)", () => {
   it("keeps blank lines as paragraph gaps and single line breaks inside a paragraph", () => {
     const text = "Intro line\n\n1. one\n2. two\n3. three\n\n\n\nLast paragraph";
     render(
       <MessageList
         messages={[
-          { role: "user", content: "q" },
-          { role: "assistant", content: text },
+          { role: "user", content: text },
+          { role: "assistant", content: "ok" },
         ]}
         error=""
       />,

@@ -1,8 +1,12 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeAll, beforeEach } from "vitest";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import App from "./App.jsx";
+import { preloadMarkdown } from "./lib/markdownLoader.js";
 
 vi.mock("./lib/sounds.js", () => ({ playSound: vi.fn() }));
+
+// The app loads the markdown renderer in the background; the tests wait for it up front.
+beforeAll(() => preloadMarkdown());
 
 const STORAGE_KEY = "ai-chatbot:messages:v1";
 const CONVO = [
